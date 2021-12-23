@@ -179,6 +179,7 @@ def show_plot(examples, n, with_channel=True, titles=None):
         else:
             # shape = (n_sample, x_axis, y_axis)
             plt.imshow(examples[i], cmap='gray_r')
+        plt.show()
 
 
 if __name__ == '__main__':
