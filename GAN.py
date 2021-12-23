@@ -154,14 +154,15 @@ def generate_gan_batch(latent_dim, batch_size):
 
 
 # create and save a plot of generated images (reversed grayscale)
-def show_plot(examples, n, with_channel=True):
+def show_plot(examples, n, with_channel=True, titles=None):
     # plot images
     for i in range(n * n):
         # define subplot
         plt.subplot(n, n, 1 + i)
-        # turn off axis
-        plt.axis('off')
-        # plot raw pixel data
+
+        if titles:
+            plt.title(titles[i])
+
         if with_channel:
             # shape = (n_sample, x_axis, y_axis, channel)
             plt.imshow(examples[i, :, :, 0], cmap='gray_r')
@@ -169,6 +170,8 @@ def show_plot(examples, n, with_channel=True):
             # shape = (n_sample, x_axis, y_axis)
             plt.imshow(examples[i], cmap='gray_r')
 
+        # turn off axis
+        plt.axis('off')
     plt.show()
 
 
