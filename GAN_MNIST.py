@@ -188,20 +188,16 @@ if __name__ == '__main__':
 
     for i in range(n_epochs):
         for j in tqdm(range(n_batch)):
-            x, y = generate_dcm_batch(G, dataset, batch_size, latent_dim)
-            d_loss, _ = D.train_on_batch(x, y)
+            x_img, y_img = generate_dcm_batch(G, dataset, batch_size, latent_dim)
+            d_loss, _ = D.train_on_batch(x_img, y_img)
 
-            x, y = generate_gan_batch(latent_dim, batch_size)
-            g_loss, _ = gan.train_on_batch(x, y)  # the D is frozen in gan
+            x_hid, y_hid = generate_gan_batch(latent_dim, batch_size)
+            g_loss = gan.train_on_batch(x_hid, y_hid)  # the D is frozen in gan
 
         # summarize loss on this epoch
-        print('>%d, d=%.3f, g=%.3f' % (i + 1, d_loss, g_loss))
-
-    # generate images
-    latent_points = np.random.randn(128, latent_dim)
-    # generate images
-    X = G.predict(latent_points)
-
-    # plot the result
-    show_plot(X, 5)
-
+        print('>%d/%d, disc_loss=%.3f, gan_loss=%.3f' % (i + 1, n_epochs, d_loss, g_loss))
+        x_img_make = G.predict(np.random.randn(batch_size, latent_dim))
+        print("origin:")
+        show_plot(x_img, 5)
+        print("make:")
+        show_plot(x_img_make, 5)
