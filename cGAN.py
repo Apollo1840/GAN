@@ -164,21 +164,21 @@ def generate_gan_batch(latent_dim, batch_size, n_classes):
 def show_plot(examples, n, with_channel=True, titles=None):
     # plot images
     for i in range(n * n):
+        # define subplot
+        plt.subplot(n, n, 1 + i)
 
         if titles:
             plt.title(titles[i])
 
-        # define subplot
-        plt.subplot(n, n, 1 + i)
-        # turn off axis
-        plt.axis('off')
-        # plot raw pixel data
         if with_channel:
             # shape = (n_sample, x_axis, y_axis, channel)
             plt.imshow(examples[i, :, :, 0], cmap='gray_r')
         else:
             # shape = (n_sample, x_axis, y_axis)
             plt.imshow(examples[i], cmap='gray_r')
+
+        # turn off axis
+        plt.axis('off')
     plt.show()
 
 
@@ -215,3 +215,13 @@ if __name__ == '__main__':
         show_plot(x_img[0], 5)  # x_img = x_img, x_label
         print("make:")
         show_plot(x_img_make, 5, titles=[str(d) for d in l])
+
+    # showcase
+    for i in range(n_classes):
+        h = np.random.randn(batch_size, latent_dim)
+        l = np.array([i for _ in range(batch_size)])
+        x_img_make = G.predict([h, l])
+        show_plot(x_img_make, 5)
+
+
+
