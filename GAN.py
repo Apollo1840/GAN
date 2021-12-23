@@ -14,6 +14,23 @@ from keras.layers import LeakyReLU
 from keras.layers import Dropout
 
 
+def Generator(latent_dim):
+    model = Sequential()
+    # foundation for 7x7 image
+    n_nodes = 128 * 7 * 7
+    model.add(Dense(n_nodes, input_dim=latent_dim))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Reshape((7, 7, 128)))
+    # upsample to 14x14
+    model.add(Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'))
+    model.add(LeakyReLU(alpha=0.2))
+    # upsample to 28x28
+    model.add(Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'))
+    model.add(LeakyReLU(alpha=0.2))
+    model.add(Conv2D(1, (7, 7), activation='sigmoid', padding='same'))
+    return model
+
+
 def Discriminator(in_shape=(28, 28, 1)):
     model = Sequential()
     model.add(Conv2D(64, (3, 3),
@@ -37,23 +54,6 @@ def Discriminator(in_shape=(28, 28, 1)):
     model.compile(loss='binary_crossentropy',
                   optimizer=opt,
                   metrics=['accuracy'])
-    return model
-
-
-def Generator(latent_dim):
-    model = Sequential()
-    # foundation for 7x7 image
-    n_nodes = 128 * 7 * 7
-    model.add(Dense(n_nodes, input_dim=latent_dim))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Reshape((7, 7, 128)))
-    # upsample to 14x14
-    model.add(Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'))
-    model.add(LeakyReLU(alpha=0.2))
-    # upsample to 28x28
-    model.add(Conv2DTranspose(128, (4, 4), strides=(2, 2), padding='same'))
-    model.add(LeakyReLU(alpha=0.2))
-    model.add(Conv2D(1, (7, 7), activation='sigmoid', padding='same'))
     return model
 
 
@@ -87,7 +87,7 @@ def load_real_samples():
 
 
 # select real samples
-def generate_real_data(dataset, n_samples):
+def generate_real_data(images, n_samples):
     """
 
     :param dataset:
@@ -96,8 +96,8 @@ def generate_real_data(dataset, n_samples):
     """
 
     # choose random instances
-    ix = np.random.randint(0, dataset.shape[0], n_samples)
-    X = dataset[ix]
+    ix = np.random.randint(0, images.shape[0], n_samples)
+    X = images[ix]
 
     # generate 'real' class labels (1)
     y = np.ones((n_samples, 1))
@@ -121,7 +121,7 @@ def generate_fake_data(generator: Model, latent_dim, n_samples):
     return X, y
 
 
-def generate_dcm_batch(generator, dataset, batch_size, latent_dim):
+def generate_dcm_batch(generator, images, batch_size, latent_dim):
     """
     generate training data for discriminator
 
@@ -133,9 +133,9 @@ def generate_dcm_batch(generator, dataset, batch_size, latent_dim):
     """
 
     # get randomly selected 'real' samples
-    X_real, y_real = generate_real_data(dataset, batch_size//2)
+    X_real, y_real = generate_real_data(images, batch_size // 2)
     # generate 'fake' examples
-    X_fake, y_fake = generate_fake_data(generator, latent_dim, batch_size//2)
+    X_fake, y_fake = generate_fake_data(generator, latent_dim, batch_size // 2)
 
     # create training set for the discriminator
     X, y = np.vstack((X_real, X_fake)), np.vstack((y_real, y_fake))
@@ -174,7 +174,7 @@ def show_plot(examples, n, with_channel=True):
 
 if __name__ == '__main__':
     # load image data
-    dataset = load_real_samples()
+    images = load_real_samples()
 
     latent_dim = 100
     G = Generator(latent_dim)
@@ -184,11 +184,11 @@ if __name__ == '__main__':
     # train model
     batch_size = 256
     n_epochs = 100
-    n_batch = int(dataset.shape[0] / batch_size)
+    n_batch = int(images.shape[0] / batch_size)
 
     for i in range(n_epochs):
         for j in tqdm(range(n_batch)):
-            x_img, y_img = generate_dcm_batch(G, dataset, batch_size, latent_dim)
+            x_img, y_img = generate_dcm_batch(G, images, batch_size, latent_dim)
             d_loss, _ = D.train_on_batch(x_img, y_img)
 
             x_hid, y_hid = generate_gan_batch(latent_dim, batch_size)
