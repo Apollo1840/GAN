@@ -189,7 +189,7 @@ if __name__ == '__main__':
     n_classes = max(labels)
 
     latent_dim = 100
-    G = Generator(latent_dim)
+    G = Generator(latent_dim, n_classes)
     D = Discriminator()
     gan = GAN(G, D)
 
